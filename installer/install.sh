@@ -28,6 +28,20 @@ if ! command -v docker >/dev/null; then
     systemctl enable --now docker
 fi
 
+# Auto-detect public IP if DOMAIN not set
+if [ -z "$DOMAIN" ]; then
+    echo "🌐 Detecting server IP..."
+    PUBLIC_IP=$(curl -4s --connect-timeout 5 https://ifconfig.io 2>/dev/null || \
+                curl -4s --connect-timeout 5 https://icanhazip.com 2>/dev/null || \
+                curl -4s --connect-timeout 5 https://ipecho.net/plain 2>/dev/null)
+    if [ -n "$PUBLIC_IP" ]; then
+        DOMAIN="$PUBLIC_IP"
+    else
+        echo "⚠️  Could not detect IP, falling back to localhost"
+        DOMAIN="localhost"
+    fi
+fi
+
 mkdir -p /etc/ctfploy/data
 
 if [ ! -f /etc/ctfploy/.env ]; then
@@ -43,8 +57,6 @@ else
 fi
 
 cat > /etc/ctfploy/docker-compose.yml <<COMPOSE
-version: '3.8'
-
 services:
   traefik:
     image: traefik:v3.0
@@ -71,7 +83,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ctfploy.rule=Host(\`\${DOMAIN:-localhost}\`)"
+      - "traefik.http.routers.ctfploy.rule=Host(\`${DOMAIN}\`)"
       - "traefik.http.services.ctfploy.loadbalancer.server.port=8000"
     restart: unless-stopped
 COMPOSE
@@ -81,5 +93,5 @@ docker compose pull
 docker compose up -d
 
 echo -e "${GREEN}✅ Conos CTFploy is running!${NC}"
-echo -e "Admin panel: http://${DOMAIN:-localhost}/admin/login"
+echo -e "Admin panel: http://${DOMAIN}/admin/login"
 echo -e "Admin password: ${ADMIN_PASSWORD}"
