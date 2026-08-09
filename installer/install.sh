@@ -37,7 +37,6 @@ if [ -z "$DOMAIN" ]; then
     if [ -n "$PUBLIC_IP" ]; then
         DOMAIN="$PUBLIC_IP"
     else
-        echo "⚠️  Could not detect IP, falling back to localhost"
         DOMAIN="localhost"
     fi
 fi
@@ -58,20 +57,16 @@ fi
 
 cat > /etc/ctfploy/docker-compose.yml <<COMPOSE
 services:
-  traefik:
-    image: traefik:v3.0
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
+  nginx:
+    image: nginx:alpine
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - /etc/ctfploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped
+    depends_on:
+      - platform
 
   platform:
     image: \${PLATFORM_IMAGE}
@@ -81,12 +76,32 @@ services:
     volumes:
       - /etc/ctfploy/data:/data
       - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.ctfploy.rule=Host(\`${DOMAIN}\`)"
-      - "traefik.http.services.ctfploy.loadbalancer.server.port=8000"
     restart: unless-stopped
 COMPOSE
+
+# Create a simple Nginx config that routes by domain/IP
+cat > /etc/ctfploy/nginx.conf <<'NGINX'
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://platform:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # For SSE (build logs)
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 86400s;
+    }
+}
+NGINX
 
 cd /etc/ctfploy
 docker compose pull
