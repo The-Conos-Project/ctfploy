@@ -36,7 +36,7 @@ if [ ! -f /etc/ctfploy/.env ]; then
     cat > /etc/ctfploy/.env <<EOF
 ADMIN_PASSWORD=$ADMIN_PASSWORD
 SECRET_KEY=$SECRET_KEY
-PLATFORM_IMAGE=ghcr.io/the-conos-project/ctfploy-platform:main
+PLATFORM_IMAGE=${PLATFORM_IMAGE:-zohidjonmarufov/ctfploy-platform:main}
 EOF
 else
     source /etc/ctfploy/.env
