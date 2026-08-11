@@ -43,17 +43,18 @@ fi
 
 mkdir -p /etc/ctfploy/data
 
-if [ ! -f /etc/ctfploy/.env ]; then
-    ADMIN_PASSWORD=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')
+if [ -f /etc/ctfploy/.env ]; then
+    source /etc/ctfploy/.env
+    SECRET_KEY=${SECRET_KEY:-$(openssl rand -hex 32)}
+else
     SECRET_KEY=$(openssl rand -hex 32)
-    cat > /etc/ctfploy/.env <<EOF
+fi
+ADMIN_PASSWORD=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')
+cat > /etc/ctfploy/.env <<EOF
 ADMIN_PASSWORD=$ADMIN_PASSWORD
 SECRET_KEY=$SECRET_KEY
 PLATFORM_IMAGE=${PLATFORM_IMAGE:-zohidjonmarufov/ctfploy-platform:main}
 EOF
-else
-    source /etc/ctfploy/.env
-fi
 
 cat > /etc/ctfploy/docker-compose.yml <<COMPOSE
 services:
@@ -109,4 +110,5 @@ docker compose up -d
 
 echo -e "${GREEN}✅ Conos CTFploy is running!${NC}"
 echo -e "Admin panel: http://${DOMAIN}/admin/sign-in"
+echo -e "Admin username: root"
 echo -e "Admin password: ${ADMIN_PASSWORD}"
