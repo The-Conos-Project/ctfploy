@@ -52,7 +52,13 @@ export default function HomePage() {
           </div>
           <nav className="flex items-center gap-4">
             <a
-              href="https://github.com/The-Conos-Project/ctfploy"
+              href="/hub"
+              className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+            >
+              Hub
+            </a>
+            <a
+              href="https://github.com/The-Conos-Project/ctfply"
               className="text-muted-foreground hover:text-foreground transition-colors"
               target="_blank"
               rel="noopener noreferrer"
@@ -93,28 +99,30 @@ export default function HomePage() {
               Docker-powered, instant challenge instances, zero configuration headaches.
             </p>
 
-            {/* Install command */}
-            <div className="mt-8 w-full max-w-2xl mx-auto">
-              <div className="rounded-lg border border-border bg-card p-1">
-                <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
-                  <Terminal className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs font-medium text-muted-foreground">bash</span>
-                </div>
-                <div className="flex items-center justify-between gap-4 px-4 py-3">
-                  <code className="text-sm sm:text-base font-mono text-left break-all text-foreground">
-                    curl -sSL https://ctfploy.conos.uz/install.sh | sudo bash
-                  </code>
+            {/* Install command - terminal style with copy in header */}
+            <div className="mt-8 w-full max-w-3xl mx-auto">
+              <div className="rounded-xl border border-border bg-card overflow-hidden shadow-lg">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs font-medium text-muted-foreground">bash</span>
+                  </div>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText("curl -sSL https://ctfploy.conos.uz/install.sh | sudo bash");
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:bg-primary/80 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-md bg-foreground text-background px-3 py-1.5 text-xs font-medium hover:opacity-80 transition-opacity"
                   >
                     {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                     {copied ? "Copied!" : "Copy"}
                   </button>
+                </div>
+                <div className="px-5 py-4">
+                  <code className="text-base sm:text-lg font-mono text-left break-all text-foreground">
+                    curl -sSL https://ctfploy.conos.uz/install.sh | sudo bash
+                  </code>
                 </div>
               </div>
             </div>
@@ -164,6 +172,12 @@ export default function HomePage() {
         <div className="mx-auto w-full max-w-[1000px] px-4 sm:px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <span>Conos CTFploy</span>
           <div className="flex items-center gap-6">
+            <a
+              href="/hub"
+              className="hover:text-foreground transition-colors"
+            >
+              Hub
+            </a>
             <a
               href="https://github.com/The-Conos-Project/ctfploy"
               className="hover:text-foreground transition-colors"

@@ -108,5 +108,5 @@ docker compose pull
 docker compose up -d
 
 echo -e "${GREEN}✅ Conos CTFploy is running!${NC}"
-echo -e "Admin panel: http://${DOMAIN}/admin/login"
+echo -e "Admin panel: http://${DOMAIN}/admin/sign-in"
 echo -e "Admin password: ${ADMIN_PASSWORD}"
