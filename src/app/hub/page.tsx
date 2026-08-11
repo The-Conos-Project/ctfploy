@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, ArrowRight, Sun, Moon } from "lucide-react";
+import { Search, ArrowRight, Copy, Check, MoreVertical, Download } from "lucide-react";
+import { SiteHeader } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 
 type Theme = "light" | "dark";
@@ -30,6 +31,8 @@ export default function HubPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -43,7 +46,6 @@ export default function HubPage() {
   }, [theme]);
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
-  const isDark = theme === "dark";
 
   useEffect(() => {
     async function fetchChallenges() {
@@ -130,6 +132,16 @@ export default function HubPage() {
     return lines.slice(0, 3).join(" ").trim();
   }
 
+  const copyLink = async (url: string, name: string) => {
+    await navigator.clipboard.writeText(url);
+    setCopiedId(name);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const toggleMenu = (name: string) => {
+    setOpenMenu(openMenu === name ? null : name);
+  };
+
   const filtered = challenges.filter((ch) => {
     const q = query.toLowerCase();
     if (!q) return true;
@@ -141,29 +153,19 @@ export default function HubPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
-          <div className="flex items-center gap-2.5">
-            <a href="/" className="flex items-center gap-2.5">
-              <span className="text-lg font-semibold tracking-tight header-wordmark">
-                CTFploy
-              </span>
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-foreground/20 text-muted-foreground">
-                Hub
-              </span>
-            </a>
-          </div>
-          <nav className="flex items-center gap-4">
-            <button
-              onClick={toggleTheme}
-              className="rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Toggle theme"
-            >
-              {mounted && isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader
+        badge="Hub"
+        rightContent={
+          <a
+            href="https://github.com/The-Conos-Project/ctf-challenges"
+            className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium inline-flex items-center gap-1"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Repo
+          </a>
+        }
+      />
 
       <main className="flex-1">
         <section className="px-4 py-12">
@@ -208,22 +210,50 @@ export default function HubPage() {
             {!loading && !error && filtered.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filtered.map((ch) => (
-                  <a
+                  <div
                     key={ch.name}
-                    href={`/hub/${encodeURIComponent(ch.name)}`}
-                    className="rounded-xl border border-border bg-card p-6 flex flex-col hover:border-foreground/20 transition-colors"
+                    className="rounded-xl border border-border bg-card flex flex-col"
                   >
-                    <div className="flex-1">
+                    <div className="p-6 flex-1">
                       <h3 className="font-semibold text-lg mb-1">{ch.display_name}</h3>
                       <p className="text-xs text-muted-foreground mb-4 font-mono">{ch.name}</p>
                       <p className="text-sm text-muted-foreground line-clamp-3">
                         {ch.description || "No description available."}
                       </p>
                     </div>
-                    <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-foreground">
-                      View details <ArrowRight className="h-4 w-4" />
+                    <div className="px-6 py-4 border-t border-border flex items-center gap-2">
+                      <button
+                        onClick={() => copyLink(ch.download_url, ch.name)}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 transition-colors flex-1"
+                      >
+                        {copiedId === ch.name ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copiedId === ch.name ? "Copied" : "Copy Link"}
+                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={() => toggleMenu(ch.name)}
+                          className="rounded-lg border border-border p-2 hover:bg-muted transition-colors"
+                          aria-label="More options"
+                        >
+                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                        {openMenu === ch.name && (
+                          <div className="absolute bottom-full right-0 mb-2 w-48 rounded-lg border border-border bg-card shadow-lg overflow-hidden z-10">
+                            <a
+                              href={ch.download_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
+                              onClick={() => setOpenMenu(null)}
+                            >
+                              <Download className="h-4 w-4" />
+                              Download .tar.gz
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </a>
+                  </div>
                 ))}
               </div>
             )}

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Download, ArrowLeft, Sun, Moon } from "lucide-react";
+import { Download, ArrowLeft, Sun, Moon, Copy, Check } from "lucide-react";
+import { SiteHeader } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 
 type Theme = "light" | "dark";
@@ -98,6 +99,7 @@ export default function ChallengeDetailPage() {
   const [challenge, setChallenge] = useState<ChallengeMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -111,7 +113,6 @@ export default function ChallengeDetailPage() {
   }, [theme]);
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
-  const isDark = theme === "dark";
 
   useEffect(() => {
     async function fetchChallenge() {
@@ -163,38 +164,21 @@ export default function ChallengeDetailPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
-          <div className="flex items-center gap-2.5">
-            <a href="/hub" className="flex items-center gap-2.5">
-              <span className="text-lg font-semibold tracking-tight header-wordmark">
-                CTFploy
-              </span>
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-foreground/20 text-muted-foreground">
-                Hub
-              </span>
-            </a>
-          </div>
-          <nav className="flex items-center gap-4">
-            <button
-              onClick={toggleTheme}
-              className="rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Toggle theme"
-            >
-              {mounted && isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader
+        badge="Hub"
+        rightContent={
+          <a
+            href="/hub"
+            className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium inline-flex items-center gap-1"
+          >
+            Back
+          </a>
+        }
+      />
 
       <main className="flex-1">
         <section className="px-4 py-12">
-          <div className="mx-auto w-full max-w-[1000px] space-y-8">
-            <a href="/hub" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Hub
-            </a>
-
+          <div className="mx-auto w-full max-w-[1000px]">
             {loading && (
               <div className="text-center py-20 text-muted-foreground">
                 Loading challenge...
@@ -208,22 +192,42 @@ export default function ChallengeDetailPage() {
             )}
 
             {!loading && !error && challenge && (
-              <div className="space-y-8">
-                <div className="rounded-xl border border-border bg-card p-8">
-                  <h1 className="text-3xl font-semibold tracking-tight mb-2">{challenge.display_name}</h1>
-                  <p className="text-sm text-muted-foreground font-mono mb-6">{challenge.name}</p>
-                  <a
-                    href={challenge.download_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 transition-colors"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download .tar.gz
-                  </a>
+              <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="p-8">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h1 className="text-3xl font-semibold tracking-tight">{challenge.display_name}</h1>
+                      <p className="text-sm text-muted-foreground font-mono mt-1">{challenge.name}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(challenge.download_url);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 transition-colors"
+                      >
+                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copied ? "Copied" : "Copy Link"}
+                      </button>
+                      <a
+                        href={challenge.download_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg border border-border bg-background text-foreground px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download
+                      </a>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground">{challenge.description}</p>
                 </div>
 
-                <div className="rounded-xl border border-border bg-card p-8">
+                <div className="border-t border-border" />
+
+                <div className="p-8">
                   <div
                     className="prose prose-invert max-w-none text-sm leading-relaxed text-foreground [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_code]:font-mono [&_code]:text-xs [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:mb-4 [&_h1]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_li]:text-muted-foreground [&_p]:mb-4 [&_p]:text-muted-foreground [&_strong]:text-foreground [&_strong]:font-medium"
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(challenge.content) }}

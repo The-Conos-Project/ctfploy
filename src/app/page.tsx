@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowRight, Container, Shield, Zap, Terminal, Sun, Moon, Copy, Check } from "lucide-react";
+import { ArrowRight, Container, Shield, Zap, Terminal, Copy, Check } from "lucide-react";
+import { SiteHeader } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 
 type Theme = "light" | "dark";
@@ -34,35 +35,18 @@ export default function HomePage() {
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
-  const isDark = theme === "dark";
-  const headerColor = isDark ? "#ffffff" : "#0B0E1C";
-
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
-          <div className="flex items-center gap-2.5">
-            <span className="text-lg font-semibold tracking-tight header-wordmark">
-              CTFploy
-            </span>
-          </div>
-          <nav className="flex items-center gap-4">
-            <a
-              href="/hub"
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
-            >
-              Hub
-            </a>
-            <button
-              onClick={toggleTheme}
-              className="rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Toggle theme"
-            >
-              {mounted && isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader
+        rightContent={
+          <a
+            href="/hub"
+            className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+          >
+            Hub
+          </a>
+        }
+      />
 
       <main className="flex-1">
         <section className="flex flex-col items-center justify-center px-4 py-24 text-center min-h-[calc(100vh-64px-72px)]">
