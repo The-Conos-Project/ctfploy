@@ -1,0 +1,188 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { ArrowRight, Container, Shield, Zap, GitBranch, Terminal, Sun, Moon, Copy, Check } from "lucide-react";
+
+type Theme = "light" | "dark";
+
+function getSystemTheme(): Theme {
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function getStoredTheme(): Theme | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("ctfploy-theme") as Theme | null;
+}
+
+export default function HomePage() {
+  const [theme, setTheme] = useState<Theme>(getStoredTheme() || getSystemTheme());
+  const [mounted, setMounted] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    localStorage.setItem("ctfploy-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+
+  const isDark = theme === "dark";
+  const logoSrc = isDark ? "/logos/logo-transparent-dark.png" : "/logos/logo-transparent-light.png";
+
+  return (
+    <div className="flex flex-1 flex-col">
+      {/* Header matching main site */}
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
+        <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
+          <div className="flex items-center gap-2.5">
+            <img src={logoSrc} alt="Conos" width={32} height={32} className="shrink-0" />
+            <span className="text-lg font-semibold tracking-tight" style={{ color: isDark ? "#ffffff" : "#0B0E1C" }}>
+              CTFploy
+            </span>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-foreground/20 text-muted-foreground">
+              By Conos
+            </span>
+          </div>
+          <nav className="flex items-center gap-4">
+            <a
+              href="https://github.com/The-Conos-Project/ctfploy"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <GitBranch className="h-5 w-5" />
+            </a>
+            <button
+              onClick={toggleTheme}
+              className="rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Toggle theme"
+            >
+              {mounted && isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <main className="flex-1">
+        <section className="flex flex-col items-center justify-center px-4 py-24 text-center min-h-[calc(100vh-64px-72px)]">
+          <div className="mx-auto w-full max-w-[1000px] space-y-8">
+            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+              CTFploy
+            </h1>
+            <p className="text-xl sm:text-2xl font-medium text-foreground/80">
+              By{" "}
+              <a
+                href="https://conos.uz"
+                className="underline underline-offset-4 hover:text-foreground"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Conos
+              </a>
+            </p>
+            <p className="text-base leading-relaxed text-muted-foreground sm:text-lg max-w-2xl mx-auto">
+              One-command deployment for self-hosted CTF platforms.
+              Docker-powered, instant challenge instances, zero configuration headaches.
+            </p>
+
+            {/* Install command */}
+            <div className="mt-8 w-full max-w-2xl mx-auto">
+              <div className="rounded-lg border border-border bg-card p-1">
+                <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+                  <Terminal className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">bash</span>
+                </div>
+                <div className="flex items-center justify-between gap-4 px-4 py-3">
+                  <code className="text-sm sm:text-base font-mono text-left break-all text-foreground">
+                    curl -sSL https://ctfploy.conos.uz/install.sh | sudo bash
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText("curl -sSL https://ctfploy.conos.uz/install.sh | sudo bash");
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:bg-primary/80 transition-colors"
+                  >
+                    {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Features */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-12 text-left">
+              <div className="space-y-2">
+                <Zap className="h-5 w-5 text-foreground" />
+                <h3 className="font-semibold text-foreground">Instant Deploy</h3>
+                <p className="text-sm text-muted-foreground">
+                  One command sets up Docker, nginx, and the platform on any Ubuntu VPS.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Container className="h-5 w-5 text-foreground" />
+                <h3 className="font-semibold text-foreground">Challenge Instances</h3>
+                <p className="text-sm text-muted-foreground">
+                  Each participant gets isolated Docker containers with dynamic flags and auto-expiry.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Shield className="h-5 w-5 text-foreground" />
+                <h3 className="font-semibold text-foreground">Access Control</h3>
+                <p className="text-sm text-muted-foreground">
+                  Code-based access, admin dashboard, and per-user instance limits out of the box.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-8">
+              <a
+                href="https://github.com/The-Conos-Project/ctfploy"
+                className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 font-medium hover:bg-primary/80 transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View on GitHub
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer matching main site */}
+      <footer className="border-t border-border/60 bg-muted/30">
+        <div className="mx-auto w-full max-w-[1000px] px-4 sm:px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <span>Conos CTFploy</span>
+          <div className="flex items-center gap-6">
+            <a
+              href="https://github.com/The-Conos-Project/ctfploy"
+              className="hover:text-foreground transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://conos.uz"
+              className="hover:text-foreground transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              conos.uz
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
