@@ -165,3 +165,10 @@
 .dark *::-webkit-scrollbar-thumb:hover {
   background: #0B0E1C;
 }
+
+.header-wordmark {
+  color: #0B0E1C;
+}
+.dark .header-wordmark {
+  color: #ffffff;
+}

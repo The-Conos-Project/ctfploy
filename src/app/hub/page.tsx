@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Download, ExternalLink, Copy, Check, ChevronDown, ChevronUp, Sun, Moon } from "lucide-react";
+import { Search, ArrowRight, Sun, Moon } from "lucide-react";
 import { Footer } from "@/components/site/footer";
 
 type Theme = "light" | "dark";
@@ -19,12 +19,8 @@ function getStoredTheme(): Theme | null {
 type Challenge = {
   name: string;
   display_name: string;
-  internal_port: number;
-  connection_type: string;
-  flag_type: string;
-  hints: string[];
+  description: string;
   download_url: string;
-  description?: string;
 };
 
 export default function HubPage() {
@@ -34,8 +30,6 @@ export default function HubPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -94,12 +88,8 @@ export default function HubPage() {
             return {
               name: meta.name || folder.name,
               display_name: meta.display_name || folder.name.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-              internal_port: Number(meta.internal_port) || 22,
-              connection_type: meta.connection_type || "ssh",
-              flag_type: meta.flag_type || "static",
-              hints: Array.isArray(meta.hints) ? meta.hints : [],
-              download_url: tarFile.download_url,
               description,
+              download_url: tarFile.download_url,
             } as Challenge;
           });
 
@@ -140,16 +130,6 @@ export default function HubPage() {
     return lines.slice(0, 3).join(" ").trim();
   }
 
-  const toggleExpand = (name: string) => {
-    setExpandedId(expandedId === name ? null : name);
-  };
-
-  const copyPath = async (url: string, name: string) => {
-    await navigator.clipboard.writeText(url);
-    setCopiedId(name);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
   const filtered = challenges.filter((ch) => {
     const q = query.toLowerCase();
     if (!q) return true;
@@ -161,27 +141,19 @@ export default function HubPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Header matching main site */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <span className="text-lg font-semibold tracking-tight" style={{ color: isDark ? "#ffffff" : "#0B0E1C" }}>
-              CTFploy
-            </span>
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-foreground/20 text-muted-foreground">
-              Hub
-            </span>
+            <a href="/" className="flex items-center gap-2.5">
+              <span className="text-lg font-semibold tracking-tight header-wordmark">
+                CTFploy
+              </span>
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-foreground/20 text-muted-foreground">
+                Hub
+              </span>
+            </a>
           </div>
           <nav className="flex items-center gap-4">
-            <a
-              href="https://github.com/The-Conos-Project/ctf-challenges"
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium inline-flex items-center gap-1"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Repo
-            </a>
             <button
               onClick={toggleTheme}
               className="rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -236,81 +208,22 @@ export default function HubPage() {
             {!loading && !error && filtered.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filtered.map((ch) => (
-                  <div
+                  <a
                     key={ch.name}
-                    className="rounded-xl border border-border bg-card flex flex-col"
+                    href={`/hub/${encodeURIComponent(ch.name)}`}
+                    className="rounded-xl border border-border bg-card p-6 flex flex-col hover:border-foreground/20 transition-colors"
                   >
-                    <div className="p-6 flex-1">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-semibold text-lg">{ch.display_name}</h3>
-                        <button
-                          onClick={() => toggleExpand(ch.name)}
-                          className="shrink-0 rounded-md p-1 hover:bg-muted transition-colors"
-                          aria-label={expandedId === ch.name ? "Collapse" : "Expand"}
-                        >
-                          {expandedId === ch.name ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </button>
-                      </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg mb-1">{ch.display_name}</h3>
                       <p className="text-xs text-muted-foreground mb-4 font-mono">{ch.name}</p>
-                      <div className="flex gap-2 mb-4 flex-wrap">
-                        <span className="inline-flex items-center rounded-full bg-primary/10 text-primary text-xs px-2.5 py-0.5 font-medium">
-                          {ch.connection_type.toUpperCase()}
-                        </span>
-                        <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground text-xs px-2.5 py-0.5 font-medium">
-                          {ch.flag_type}
-                        </span>
-                        <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground text-xs px-2.5 py-0.5 font-medium">
-                          Port {ch.internal_port}
-                        </span>
-                      </div>
-                      {expandedId === ch.name && (
-                        <div className="mt-4 pt-4 border-t border-border space-y-3">
-                          {ch.description && (
-                            <p className="text-sm text-muted-foreground">{ch.description}</p>
-                          )}
-                          {ch.hints && ch.hints.length > 0 && (
-                            <div>
-                              <p className="text-xs font-medium text-foreground mb-1">Hints</p>
-                              <ul className="list-disc list-inside text-xs text-muted-foreground space-y-1">
-                                {ch.hints.map((hint, idx) => (
-                                  <li key={idx}>{hint}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          <div>
-                            <p className="text-xs font-medium text-foreground mb-1">Download URL</p>
-                            <div className="flex items-center gap-2">
-                              <code className="flex-1 text-xs bg-muted p-2 rounded-md break-all text-muted-foreground">
-                                {ch.download_url}
-                              </code>
-                              <button
-                                onClick={() => copyPath(ch.download_url, ch.name)}
-                                className="shrink-0 rounded-md bg-foreground text-background px-2 py-1.5 text-xs font-medium hover:opacity-80 transition-opacity"
-                              >
-                                {copiedId === ch.name ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {ch.description || "No description available."}
+                      </p>
                     </div>
-                    <div className="px-6 py-4 border-t border-border">
-                      <a
-                        href={ch.download_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 transition-colors w-full"
-                      >
-                        <Download className="h-4 w-4" />
-                        Download .tar.gz
-                      </a>
+                    <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-foreground">
+                      View details <ArrowRight className="h-4 w-4" />
                     </div>
-                  </div>
+                  </a>
                 ))}
               </div>
             )}

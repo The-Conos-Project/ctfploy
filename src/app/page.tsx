@@ -35,14 +35,14 @@ export default function HomePage() {
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   const isDark = theme === "dark";
+  const headerColor = isDark ? "#ffffff" : "#0B0E1C";
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Header matching main site */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <span className="text-lg font-semibold tracking-tight" style={{ color: isDark ? "#ffffff" : "#0B0E1C" }}>
+            <span className="text-lg font-semibold tracking-tight header-wordmark">
               CTFploy
             </span>
           </div>
@@ -64,7 +64,6 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Hero */}
       <main className="flex-1">
         <section className="flex flex-col items-center justify-center px-4 py-24 text-center min-h-[calc(100vh-64px-72px)]">
           <div className="mx-auto w-full max-w-[1000px] space-y-8">
@@ -76,7 +75,6 @@ export default function HomePage() {
               Docker-powered, instant challenge instances, zero configuration headaches.
             </p>
 
-            {/* Install command - terminal style with copy in header */}
             <div className="mt-8 w-full max-w-2xl mx-auto">
               <div className="rounded-xl border border-border bg-card overflow-hidden shadow-lg">
                 <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
@@ -104,7 +102,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Features */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-12 text-left">
               <div className="space-y-2">
                 <Zap className="h-5 w-5 text-foreground" />
@@ -144,7 +141,6 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* Footer matching main site */}
       <Footer />
     </div>
   );
