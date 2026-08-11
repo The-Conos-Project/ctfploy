@@ -1,7 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Download, ExternalLink } from "lucide-react";
+import { Search, Download, ExternalLink, Copy, Check, ChevronDown, ChevronUp, Sun, Moon } from "lucide-react";
+import { Footer } from "@/components/site/footer";
+
+type Theme = "light" | "dark";
+
+function getSystemTheme(): Theme {
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function getStoredTheme(): Theme | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("ctfploy-theme") as Theme | null;
+}
 
 type Challenge = {
   name: string;
@@ -11,13 +24,32 @@ type Challenge = {
   flag_type: string;
   hints: string[];
   download_url: string;
+  description?: string;
 };
 
 export default function HubPage() {
+  const [theme, setTheme] = useState<Theme>(getStoredTheme() || getSystemTheme());
+  const [mounted, setMounted] = useState(false);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    localStorage.setItem("ctfploy-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const isDark = theme === "dark";
 
   useEffect(() => {
     async function fetchChallenges() {
@@ -57,6 +89,8 @@ export default function HubPage() {
             const mdContent = await mdRes.text();
 
             const meta = parseFrontmatter(mdContent);
+            const description = extractDescription(mdContent);
+
             return {
               name: meta.name || folder.name,
               display_name: meta.display_name || folder.name.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -65,6 +99,7 @@ export default function HubPage() {
               flag_type: meta.flag_type || "static",
               hints: Array.isArray(meta.hints) ? meta.hints : [],
               download_url: tarFile.download_url,
+              description,
             } as Challenge;
           });
 
@@ -99,6 +134,22 @@ export default function HubPage() {
     return meta;
   }
 
+  function extractDescription(text: string): string {
+    const withoutFrontmatter = text.replace(/^---[\s\S]*?---/, "").trim();
+    const lines = withoutFrontmatter.split("\n").filter((line) => line.trim() && !line.startsWith("#"));
+    return lines.slice(0, 3).join(" ").trim();
+  }
+
+  const toggleExpand = (name: string) => {
+    setExpandedId(expandedId === name ? null : name);
+  };
+
+  const copyPath = async (url: string, name: string) => {
+    await navigator.clipboard.writeText(url);
+    setCopiedId(name);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   const filtered = challenges.filter((ch) => {
     const q = query.toLowerCase();
     if (!q) return true;
@@ -110,17 +161,16 @@ export default function HubPage() {
 
   return (
     <div className="flex flex-1 flex-col">
+      {/* Header matching main site */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <a href="/" className="flex items-center gap-2.5">
-              <span className="text-lg font-semibold tracking-tight" style={{ color: "var(--foreground)" }}>
-                CTFploy
-              </span>
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-foreground/20 text-muted-foreground">
-                Hub
-              </span>
-            </a>
+            <span className="text-lg font-semibold tracking-tight" style={{ color: isDark ? "#ffffff" : "#0B0E1C" }}>
+              CTFploy
+            </span>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-foreground/20 text-muted-foreground">
+              Hub
+            </span>
           </div>
           <nav className="flex items-center gap-4">
             <a
@@ -132,6 +182,13 @@ export default function HubPage() {
               <ExternalLink className="h-4 w-4" />
               Repo
             </a>
+            <button
+              onClick={toggleTheme}
+              className="rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Toggle theme"
+            >
+              {mounted && isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
           </nav>
         </div>
       </header>
@@ -181,10 +238,23 @@ export default function HubPage() {
                 {filtered.map((ch) => (
                   <div
                     key={ch.name}
-                    className="rounded-xl border border-border bg-card p-6 flex flex-col"
+                    className="rounded-xl border border-border bg-card flex flex-col"
                   >
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">{ch.display_name}</h3>
+                    <div className="p-6 flex-1">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="font-semibold text-lg">{ch.display_name}</h3>
+                        <button
+                          onClick={() => toggleExpand(ch.name)}
+                          className="shrink-0 rounded-md p-1 hover:bg-muted transition-colors"
+                          aria-label={expandedId === ch.name ? "Collapse" : "Expand"}
+                        >
+                          {expandedId === ch.name ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </button>
+                      </div>
                       <p className="text-xs text-muted-foreground mb-4 font-mono">{ch.name}</p>
                       <div className="flex gap-2 mb-4 flex-wrap">
                         <span className="inline-flex items-center rounded-full bg-primary/10 text-primary text-xs px-2.5 py-0.5 font-medium">
@@ -197,16 +267,49 @@ export default function HubPage() {
                           Port {ch.internal_port}
                         </span>
                       </div>
+                      {expandedId === ch.name && (
+                        <div className="mt-4 pt-4 border-t border-border space-y-3">
+                          {ch.description && (
+                            <p className="text-sm text-muted-foreground">{ch.description}</p>
+                          )}
+                          {ch.hints && ch.hints.length > 0 && (
+                            <div>
+                              <p className="text-xs font-medium text-foreground mb-1">Hints</p>
+                              <ul className="list-disc list-inside text-xs text-muted-foreground space-y-1">
+                                {ch.hints.map((hint, idx) => (
+                                  <li key={idx}>{hint}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-xs font-medium text-foreground mb-1">Download URL</p>
+                            <div className="flex items-center gap-2">
+                              <code className="flex-1 text-xs bg-muted p-2 rounded-md break-all text-muted-foreground">
+                                {ch.download_url}
+                              </code>
+                              <button
+                                onClick={() => copyPath(ch.download_url, ch.name)}
+                                className="shrink-0 rounded-md bg-foreground text-background px-2 py-1.5 text-xs font-medium hover:opacity-80 transition-opacity"
+                              >
+                                {copiedId === ch.name ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <a
-                      href={ch.download_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 transition-colors mt-auto"
-                    >
-                      <Download className="h-4 w-4" />
-                      Download .tar.gz
-                    </a>
+                    <div className="px-6 py-4 border-t border-border">
+                      <a
+                        href={ch.download_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 transition-colors w-full"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download .tar.gz
+                      </a>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -215,32 +318,7 @@ export default function HubPage() {
         </section>
       </main>
 
-      <footer className="border-t border-border/60 bg-muted/30">
-        <div className="mx-auto w-full max-w-[1000px] px-4 sm:px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <span>Conos CTFploy</span>
-          <div className="flex items-center gap-6">
-            <a href="/" className="hover:text-foreground transition-colors">
-              Home
-            </a>
-            <a
-              href="https://github.com/The-Conos-Project/ctfploy"
-              className="hover:text-foreground transition-colors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub
-            </a>
-            <a
-              href="https://conos.uz"
-              className="hover:text-foreground transition-colors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              conos.uz
-            </a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

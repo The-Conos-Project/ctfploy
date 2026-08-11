@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowRight, Container, Shield, Zap, GitBranch, Terminal, Sun, Moon, Copy, Check } from "lucide-react";
+import { ArrowRight, Container, Shield, Zap, Terminal, Sun, Moon, Copy, Check } from "lucide-react";
+import { Footer } from "@/components/site/footer";
 
 type Theme = "light" | "dark";
 
@@ -34,7 +35,6 @@ export default function HomePage() {
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   const isDark = theme === "dark";
-  const logoSrc = isDark ? "/logos/logo-transparent-dark.png" : "/logos/logo-transparent-light.png";
 
   return (
     <div className="flex flex-1 flex-col">
@@ -42,12 +42,8 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <img src={logoSrc} alt="Conos" width={32} height={32} className="shrink-0" />
             <span className="text-lg font-semibold tracking-tight" style={{ color: isDark ? "#ffffff" : "#0B0E1C" }}>
               CTFploy
-            </span>
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-foreground/20 text-muted-foreground">
-              By Conos
             </span>
           </div>
           <nav className="flex items-center gap-4">
@@ -56,14 +52,6 @@ export default function HomePage() {
               className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
             >
               Hub
-            </a>
-            <a
-              href="https://github.com/The-Conos-Project/ctfply"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <GitBranch className="h-5 w-5" />
             </a>
             <button
               onClick={toggleTheme}
@@ -83,26 +71,15 @@ export default function HomePage() {
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
               CTFploy
             </h1>
-            <p className="text-xl sm:text-2xl font-medium text-foreground/80">
-              By{" "}
-              <a
-                href="https://conos.uz"
-                className="underline underline-offset-4 hover:text-foreground"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Conos
-              </a>
-            </p>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg max-w-2xl mx-auto">
               One-command deployment for self-hosted CTF platforms.
               Docker-powered, instant challenge instances, zero configuration headaches.
             </p>
 
             {/* Install command - terminal style with copy in header */}
-            <div className="mt-8 w-full max-w-3xl mx-auto">
+            <div className="mt-8 w-full max-w-2xl mx-auto">
               <div className="rounded-xl border border-border bg-card overflow-hidden shadow-lg">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
                   <div className="flex items-center gap-2">
                     <Terminal className="h-4 w-4 text-muted-foreground" />
                     <span className="text-xs font-medium text-muted-foreground">bash</span>
@@ -119,8 +96,8 @@ export default function HomePage() {
                     {copied ? "Copied!" : "Copy"}
                   </button>
                 </div>
-                <div className="px-5 py-4">
-                  <code className="text-base sm:text-lg font-mono text-left break-all text-foreground">
+                <div className="px-5 py-3">
+                  <code className="text-sm sm:text-base font-mono text-left break-all text-foreground">
                     curl -sSL https://ctfploy.conos.uz/install.sh | sudo bash
                   </code>
                 </div>
@@ -168,35 +145,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer matching main site */}
-      <footer className="border-t border-border/60 bg-muted/30">
-        <div className="mx-auto w-full max-w-[1000px] px-4 sm:px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <span>Conos CTFploy</span>
-          <div className="flex items-center gap-6">
-            <a
-              href="/hub"
-              className="hover:text-foreground transition-colors"
-            >
-              Hub
-            </a>
-            <a
-              href="https://github.com/The-Conos-Project/ctfploy"
-              className="hover:text-foreground transition-colors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub
-            </a>
-            <a
-              href="https://conos.uz"
-              className="hover:text-foreground transition-colors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              conos.uz
-            </a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
