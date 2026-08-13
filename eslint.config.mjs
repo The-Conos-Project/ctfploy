@@ -1,9 +1,11 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
+import nextPlugin from "@next/eslint-plugin-next";
 
 export default defineConfig([
-  ...nextVitals,
   {
+    plugins: {
+      "@next/next": nextPlugin,
+    },
     rules: {
       // These pages intentionally initialize browser-only theme state after hydration.
       "react-hooks/set-state-in-effect": "off",

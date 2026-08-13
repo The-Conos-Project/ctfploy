@@ -17,7 +17,16 @@ npm install
 npm run build
 ```
 
-The static export will be in the `out/` directory. Deploy it to any static host (Vercel, Cloudflare Pages, nginx, etc.) under your domain (e.g. `ctfploy.conos.uz`).
+Deploy the application to a Next.js-compatible host under your domain (e.g. `ctfploy.conos.uz`).
+
+### Cloudflare Pages
+
+Use the **Next.js** framework preset, or configure:
+
+- Build command: `npx @cloudflare/next-on-pages@1`
+- Build output directory: `.vercel/output/static`
+
+The Cloudflare adapter dependencies are pinned in `package.json` so the build does not select incompatible latest packages.
 
 ## Docs
 
