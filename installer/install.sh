@@ -28,6 +28,11 @@ if ! command -v docker >/dev/null; then
     systemctl enable --now docker
 fi
 
+if ! docker compose version >/dev/null 2>&1; then
+    echo "❌ Docker Compose v2 is required. Install the docker-compose-plugin and run this installer again." >&2
+    exit 1
+fi
+
 # Auto-detect public IP if DOMAIN not set
 if [ -z "$DOMAIN" ]; then
     echo "🌐 Detecting server IP..."
@@ -43,18 +48,17 @@ fi
 
 mkdir -p /etc/ctfploy/data
 
-if [ -f /etc/ctfploy/.env ]; then
-    source /etc/ctfploy/.env
-    SECRET_KEY=${SECRET_KEY:-$(openssl rand -hex 32)}
-else
+if [ ! -f /etc/ctfploy/.env ]; then
+    ADMIN_PASSWORD=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')
     SECRET_KEY=$(openssl rand -hex 32)
-fi
-ADMIN_PASSWORD=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')
-cat > /etc/ctfploy/.env <<EOF
+    cat > /etc/ctfploy/.env <<EOF
 ADMIN_PASSWORD=$ADMIN_PASSWORD
 SECRET_KEY=$SECRET_KEY
 PLATFORM_IMAGE=${PLATFORM_IMAGE:-zohidjonmarufov/ctfploy-platform:main}
 EOF
+else
+    source /etc/ctfploy/.env
+fi
 
 cat > /etc/ctfploy/docker-compose.yml <<COMPOSE
 services:

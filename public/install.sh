@@ -28,6 +28,11 @@ if ! command -v docker >/dev/null; then
     systemctl enable --now docker
 fi
 
+if ! docker compose version >/dev/null 2>&1; then
+    echo "❌ Docker Compose v2 is required. Install the docker-compose-plugin and run this installer again." >&2
+    exit 1
+fi
+
 # Auto-detect public IP if DOMAIN not set
 if [ -z "$DOMAIN" ]; then
     echo "🌐 Detecting server IP..."
@@ -109,4 +114,5 @@ docker compose up -d
 
 echo -e "${GREEN}✅ Conos CTFploy is running!${NC}"
 echo -e "Admin panel: http://${DOMAIN}/admin/sign-in"
+echo -e "Admin username: root"
 echo -e "Admin password: ${ADMIN_PASSWORD}"

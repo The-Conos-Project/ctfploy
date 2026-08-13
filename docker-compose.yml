@@ -1,0 +1,15 @@
+services:
+  platform:
+    image: ${PLATFORM_IMAGE:-zohidjonmarufov/ctfploy-platform:main}
+    ports:
+      - "8000:8000"
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in your environment or .env file}
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in your environment or .env file}
+    volumes:
+      - ctfploy-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+volumes:
+  ctfploy-data:
