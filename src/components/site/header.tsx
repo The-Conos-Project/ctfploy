@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { Sun, Moon } from "lucide-react";
-import { useSyncExternalStore, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 type Theme = "light" | "dark";
 
@@ -37,26 +38,6 @@ function useClientTheme() {
   return { mounted, isDark, toggleTheme };
 }
 
-function ThemeAwareLogo({ size = 32 }: { size?: number }) {
-  const { mounted, isDark } = useClientTheme();
-  const src = isDark ? "/logos/logo-transparent-dark.png" : "/logos/logo-transparent-light.png";
-
-  if (!mounted) {
-    return <span style={{ width: size, height: size, display: "inline-block" }} />;
-  }
-
-  return (
-    <Image
-      src={src}
-      alt="Conos"
-      width={size}
-      height={size}
-      className="shrink-0"
-      priority
-    />
-  );
-}
-
 type SiteHeaderProps = {
   badge?: string;
   rightContent?: React.ReactNode;
@@ -68,8 +49,8 @@ export function SiteHeader({ badge, rightContent }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
-        <div className="flex items-center gap-2.5">
-          <ThemeAwareLogo size={32} />
+        <Link href="/" className="flex items-center gap-2.5" aria-label="CTFploy home">
+          <Image src="/logos/logo-solid.png" alt="" width={34} height={34} className="h-[34px] w-[34px] shrink-0 rounded-lg" priority />
           <span className="text-lg font-semibold tracking-tight header-wordmark">
             CTFploy
           </span>
@@ -78,7 +59,7 @@ export function SiteHeader({ badge, rightContent }: SiteHeaderProps) {
               {badge}
             </span>
           )}
-        </div>
+        </Link>
         <nav className="flex items-center gap-4">
           {rightContent}
           <button

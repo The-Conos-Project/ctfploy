@@ -1,267 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, ArrowRight, Copy, Check, MoreVertical, Download } from "lucide-react";
-import { SiteHeader } from "@/components/site/header";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ArrowUpRight, Copy, Check, Download, RefreshCw, Search } from "lucide-react";
 import { Footer } from "@/components/site/footer";
-
-type Theme = "light" | "dark";
-
-function getSystemTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-function getStoredTheme(): Theme | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("ctfploy-theme") as Theme | null;
-}
-
-type Challenge = {
-  name: string;
-  display_name: string;
-  description: string;
-  download_url: string;
-};
+import { SiteHeader } from "@/components/site/header";
+import { Challenge, fetchChallenges } from "@/lib/challenges";
 
 export default function HubPage() {
-  const [theme, setTheme] = useState<Theme>(getStoredTheme() || getSystemTheme());
-  const [mounted, setMounted] = useState(false);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-    localStorage.setItem("ctfploy-theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
-
-  useEffect(() => {
-    async function fetchChallenges() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const repo = "The-Conos-Project/ctf-challenges";
-        const folderUrl = `https://api.github.com/repos/${repo}/contents/challenges`;
-
-        const folderRes = await fetch(folderUrl, {
-          headers: { Accept: "application/vnd.github.v3+json" },
-          next: { revalidate: 3600 },
-        });
-
-        if (!folderRes.ok) throw new Error("Failed to load challenges");
-        const folders = await folderRes.json();
-
-        const challengePromises = folders
-          .filter((item: any) => item.type === "dir")
-          .map(async (folder: any) => {
-            const folderApiUrl = folder.url;
-            const filesRes = await fetch(folderApiUrl, {
-              headers: { Accept: "application/vnd.github.v3+json" },
-            });
-
-            if (!filesRes.ok) return null;
-            const files = await filesRes.json();
-
-            const mdFile = files.find((f: any) => f.name.endsWith(".md"));
-            const tarFile = files.find((f: any) => f.name.endsWith(".tar.gz"));
-
-            if (!mdFile || !tarFile) return null;
-
-            const mdRes = await fetch(mdFile.download_url);
-            if (!mdRes.ok) return null;
-            const mdContent = await mdRes.text();
-
-            const meta = parseFrontmatter(mdContent);
-            const description = extractDescription(mdContent);
-
-            return {
-              name: meta.name || folder.name,
-              display_name: meta.display_name || folder.name.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-              description,
-              download_url: tarFile.download_url,
-            } as Challenge;
-          });
-
-        const results = await Promise.all(challengePromises);
-        setChallenges(results.filter((ch): ch is Challenge => ch !== null));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchChallenges();
-  }, []);
-
-  function parseFrontmatter(text: string): Record<string, any> {
-    const meta: Record<string, any> = {};
-    if (!text.startsWith("---")) return meta;
-    const end = text.indexOf("---", 3);
-    if (end === -1) return meta;
-    const block = text.slice(3, end).trim();
-    for (const line of block.split("\n")) {
-      if (!line.includes(":")) continue;
-      const [key, ...rest] = line.split(":");
-      const value = rest.join(":").trim();
-      if (value.startsWith("[") && value.endsWith("]")) {
-        meta[key.trim()] = value.slice(1, -1).split(",").map((v) => v.trim()).filter(Boolean);
-      } else {
-        meta[key.trim()] = value;
-      }
-    }
-    return meta;
-  }
-
-  function extractDescription(text: string): string {
-    const withoutFrontmatter = text.replace(/^---[\s\S]*?---/, "").trim();
-    const lines = withoutFrontmatter.split("\n").filter((line) => line.trim() && !line.startsWith("#"));
-    return lines.slice(0, 3).join(" ").trim();
-  }
-
-  const copyLink = async (url: string, name: string) => {
-    await navigator.clipboard.writeText(url);
-    setCopiedId(name);
-    setTimeout(() => setCopiedId(null), 2000);
+  const load = async () => {
+    setLoading(true); setError(null);
+    try { setChallenges(await fetchChallenges()); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Could not load challenges"); }
+    finally { setLoading(false); }
   };
+  useEffect(() => { void load(); }, []);
+  const filtered = challenges.filter((challenge) => `${challenge.name} ${challenge.display_name} ${challenge.description}`.toLowerCase().includes(query.toLowerCase()));
+  const copy = async (challenge: Challenge) => { await navigator.clipboard.writeText(challenge.download_url); setCopied(challenge.name); window.setTimeout(() => setCopied(null), 1800); };
 
-  const toggleMenu = (name: string) => {
-    setOpenMenu(openMenu === name ? null : name);
-  };
-
-  const filtered = challenges.filter((ch) => {
-    const q = query.toLowerCase();
-    if (!q) return true;
-    return (
-      ch.display_name.toLowerCase().includes(q) ||
-      ch.name.toLowerCase().includes(q)
-    );
-  });
-
-  return (
-    <div className="flex flex-1 flex-col">
-      <SiteHeader
-        badge="Hub"
-        rightContent={
-          <a
-            href="https://github.com/The-Conos-Project/ctf-challenges"
-            className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium inline-flex items-center gap-1"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Repo
-          </a>
-        }
-      />
-
-      <main className="flex-1">
-        <section className="px-4 py-12">
-          <div className="mx-auto w-full max-w-[1000px] space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-semibold tracking-tight">CTFploy Hub</h1>
-                <p className="text-muted-foreground mt-1">
-                  Browse and import challenges from the Conos CTF challenges repository.
-                </p>
-              </div>
-              <div className="relative w-full sm:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search challenges..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-card pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
-
-            {loading && (
-              <div className="text-center py-20 text-muted-foreground">
-                Loading challenges...
-              </div>
-            )}
-
-            {error && (
-              <div className="text-center py-20 text-red-400">
-                Failed to load challenges: {error}
-              </div>
-            )}
-
-            {!loading && !error && filtered.length === 0 && (
-              <div className="text-center py-20 text-muted-foreground">
-                No challenges found.
-              </div>
-            )}
-
-            {!loading && !error && filtered.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filtered.map((ch) => (
-                  <div
-                    key={ch.name}
-                    className="rounded-xl border border-border bg-card flex flex-col"
-                  >
-                    <div className="p-6 flex-1">
-                      <h3 className="font-semibold text-lg mb-1">{ch.display_name}</h3>
-                      <p className="text-xs text-muted-foreground mb-4 font-mono">{ch.name}</p>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {ch.description || "No description available."}
-                      </p>
-                    </div>
-                    <div className="px-6 py-4 border-t border-border flex items-center gap-2">
-                      <button
-                        onClick={() => copyLink(ch.download_url, ch.name)}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 transition-colors flex-1"
-                      >
-                        {copiedId === ch.name ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        {copiedId === ch.name ? "Copied" : "Copy Link"}
-                      </button>
-                      <div className="relative">
-                        <button
-                          onClick={() => toggleMenu(ch.name)}
-                          className="rounded-lg border border-border p-2 hover:bg-muted transition-colors"
-                          aria-label="More options"
-                        >
-                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                        </button>
-                        {openMenu === ch.name && (
-                          <div className="absolute bottom-full right-0 mb-2 w-48 rounded-lg border border-border bg-card shadow-lg overflow-hidden z-10">
-                            <a
-                              href={ch.download_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
-                              onClick={() => setOpenMenu(null)}
-                            >
-                              <Download className="h-4 w-4" />
-                              Download .tar.gz
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
-
-      <Footer />
-    </div>
-  );
+  return <div className="flex min-h-screen flex-col"><SiteHeader badge="Hub" rightContent={<a href="https://github.com/The-Conos-Project/ctf-challenges" target="_blank" rel="noreferrer" className="text-sm font-medium text-muted-foreground hover:text-foreground">GitHub repository</a>} />
+    <main className="flex-1 px-4 py-12 sm:py-16"><div className="mx-auto max-w-6xl space-y-9"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="mb-2 text-sm font-medium text-muted-foreground">Live repository catalogue</p><h1 className="text-4xl font-semibold tracking-tight">Challenge Hub</h1><p className="mt-3 max-w-2xl text-muted-foreground">New Markdown guides and challenge archives appear here automatically. No website redeploy is required.</p></div><button onClick={() => void load()} className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"><RefreshCw className="h-4 w-4" />Refresh</button></div>
+      <div className="relative max-w-xl"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search challenges" className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-4 outline-none focus:ring-2 focus:ring-ring" /></div>
+      {loading && <p className="py-20 text-center text-muted-foreground">Loading live challenges…</p>}{error && <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-5 text-destructive">{error} <button onClick={() => void load()} className="ml-2 underline">Try again</button></div>}
+      {!loading && !error && <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{filtered.map((challenge) => <article key={challenge.name} className="flex min-h-64 flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"><p className="font-mono text-xs text-muted-foreground">{challenge.name}</p><h2 className="mt-3 text-xl font-semibold">{challenge.display_name}</h2><p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{challenge.description || "Open the challenge page for its guide and download."}</p><div className="mt-6 flex gap-2"><Link href={`/hub/${encodeURIComponent(challenge.name)}`} className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">View challenge <ArrowUpRight className="h-4 w-4" /></Link><button onClick={() => void copy(challenge)} className="rounded-lg border border-border p-2.5" aria-label={`Copy ${challenge.display_name} link`}>{copied === challenge.name ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</button><a href={challenge.download_url} target="_blank" rel="noreferrer" className="rounded-lg border border-border p-2.5" aria-label={`Download ${challenge.display_name}`}><Download className="h-4 w-4" /></a></div></article>)}</div>}
+      {!loading && !error && !filtered.length && <p className="py-20 text-center text-muted-foreground">No challenge matches “{query}”.</p>}</div></main><Footer /></div>;
 }

@@ -90,7 +90,7 @@ export default function ChallengeView({ challenge }: { challenge: ChallengeMeta 
 
       <div className="p-8">
         <div
-          className="prose prose-invert max-w-none text-sm leading-relaxed text-foreground [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_code]:font-mono [&_code]:text-xs [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:mb-4 [&_h1]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_li]:text-muted-foreground [&_p]:mb-4 [&_p]:text-muted-foreground [&_strong]:text-foreground [&_strong]:font-medium"
+          className="max-w-none text-sm leading-relaxed text-foreground [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_code]:font-mono [&_code]:text-xs [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:mb-4 [&_h1]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_li]:text-muted-foreground [&_p]:mb-4 [&_p]:text-muted-foreground [&_strong]:text-foreground [&_strong]:font-medium"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(challenge.content) }}
         />
       </div>
