@@ -8,6 +8,10 @@ One-command CTF platform deployment.
 curl -sSL https://ctfploy.conos.uz/install.sh | sudo bash
 ```
 
+If the platform administrator password is lost, log in to the VPS as root and
+run `sudo ctfploy-reset-admin-password`. Enter a new 12+ character password;
+the platform container is restarted automatically.
+
 ## Landing Page
 
 The landing page is a Next.js app. To build it:

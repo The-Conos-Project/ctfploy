@@ -46,7 +46,7 @@ if [ -z "$DOMAIN" ]; then
     fi
 fi
 
-mkdir -p /etc/ctfploy/data
+mkdir -p /etc/ctfploy/data /etc/ctfploy/nginx
 
 if [ ! -f /etc/ctfploy/.env ]; then
     ADMIN_PASSWORD=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')
@@ -68,7 +68,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /etc/ctfploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/ctfploy/nginx:/etc/nginx/conf.d:ro
+      - ctfploy-acme:/var/www/certbot:ro
+      - ctfploy-certs:/etc/letsencrypt:ro
     restart: unless-stopped
     depends_on:
       - platform
@@ -80,15 +82,28 @@ services:
       SECRET_KEY: \${SECRET_KEY}
     volumes:
       - /etc/ctfploy/data:/data
+      - /etc/ctfploy/nginx:/etc/ctfploy/nginx
+      - ctfploy-acme:/var/www/certbot
+      - ctfploy-certs:/etc/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+
+volumes:
+  ctfploy-acme:
+    name: ctfploy-acme
+  ctfploy-certs:
+    name: ctfploy-certs
 COMPOSE
 
 # Create a simple Nginx config that routes by domain/IP
-cat > /etc/ctfploy/nginx.conf <<'NGINX'
+cat > /etc/ctfploy/nginx/default.conf <<'NGINX'
 server {
     listen 80;
     server_name _;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
 
     location / {
         proxy_pass http://platform:8000;
@@ -108,6 +123,46 @@ server {
 }
 NGINX
 
+# Recovery is deliberately local-only: it requires root on the VPS and updates
+# the environment file used by the platform container.
+cat > /usr/local/bin/ctfploy-reset-admin-password <<'RESET_ADMIN'
+#!/bin/bash
+set -euo pipefail
+
+ENV_FILE=/etc/ctfploy/.env
+COMPOSE_FILE=/etc/ctfploy/docker-compose.yml
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Run this command as root: sudo ctfploy-reset-admin-password" >&2
+    exit 1
+fi
+if [ ! -f "$ENV_FILE" ] || [ ! -f "$COMPOSE_FILE" ]; then
+    echo "CTFploy is not installed at /etc/ctfploy." >&2
+    exit 1
+fi
+
+NEW_PASSWORD=${1:-}
+if [ -z "$NEW_PASSWORD" ]; then
+    read -r -s -p "New CTFploy admin password: " NEW_PASSWORD
+    echo
+fi
+if ! [[ "$NEW_PASSWORD" =~ ^[A-Za-z0-9_-]{12,128}$ ]]; then
+    echo "Password must be 12-128 characters using letters, numbers, _ or -." >&2
+    exit 1
+fi
+
+TEMP_FILE=$(mktemp /etc/ctfploy/.env.XXXXXX)
+trap 'rm -f "$TEMP_FILE"' EXIT
+awk -v password="$NEW_PASSWORD" 'BEGIN { found=0 } /^ADMIN_PASSWORD=/ { print "ADMIN_PASSWORD=" password; found=1; next } { print } END { if (!found) print "ADMIN_PASSWORD=" password }' "$ENV_FILE" > "$TEMP_FILE"
+chmod 600 "$TEMP_FILE"
+mv "$TEMP_FILE" "$ENV_FILE"
+trap - EXIT
+
+docker compose -f "$COMPOSE_FILE" up -d --force-recreate platform
+echo "CTFploy admin password reset. Sign in as root with the new password."
+RESET_ADMIN
+chmod 700 /usr/local/bin/ctfploy-reset-admin-password
+
 cd /etc/ctfploy
 docker compose pull
 docker compose up -d
@@ -116,3 +171,4 @@ echo -e "${GREEN}✅ Conos CTFploy is running!${NC}"
 echo -e "Admin panel: http://${DOMAIN}/admin/sign-in"
 echo -e "Admin username: root"
 echo -e "Admin password: ${ADMIN_PASSWORD}"
+echo -e "Recovery command: sudo ctfploy-reset-admin-password"
