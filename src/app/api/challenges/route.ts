@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 const repo = "The-Conos-Project/ctf-challenges";
 const headers = { Accept: "application/vnd.github.v3+json" };
 
