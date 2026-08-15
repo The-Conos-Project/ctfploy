@@ -69,8 +69,8 @@ export default function ChallengeView({ challenge }: { challenge: ChallengeMeta 
               }}
               className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 transition-colors"
             >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copied" : "Copy Link"}
+               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+               {copied ? "Copied" : "Copy Link for CTFploy"}
             </button>
             <a
               href={challenge.download_url}

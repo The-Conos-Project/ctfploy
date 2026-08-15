@@ -50,13 +50,12 @@ export default function HomePage() {
 
       <main className="flex-1">
         <section className="flex flex-col items-center justify-center px-4 py-24 text-center min-h-[calc(100vh-64px-72px)]">
-          <div className="mx-auto w-full max-w-[1000px] space-y-8">
+          <div className="mx-auto w-full max-w-[1100px] space-y-8">
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
-              CTFploy
+              Run better security labs.
             </h1>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg max-w-2xl mx-auto">
-              One-command deployment for self-hosted CTF platforms.
-              Docker-powered, instant challenge instances, zero configuration headaches.
+              CTFploy gives instructors a simple way to import Docker challenges, organise classes, and provide each student an isolated lab instance.
             </p>
 
             <div className="mt-8 w-full max-w-2xl mx-auto">

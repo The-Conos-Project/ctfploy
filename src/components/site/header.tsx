@@ -39,26 +39,20 @@ function useClientTheme() {
 }
 
 type SiteHeaderProps = {
-  badge?: string;
   rightContent?: React.ReactNode;
 };
 
-export function SiteHeader({ badge, rightContent }: SiteHeaderProps) {
+export function SiteHeader({ rightContent }: SiteHeaderProps) {
   const { mounted, isDark, toggleTheme } = useClientTheme();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto w-full max-w-[1000px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
+      <div className="mx-auto w-full max-w-[1100px] flex h-16 items-center justify-between gap-4 px-4 sm:px-5">
         <Link href="/" className="flex items-center gap-2.5" aria-label="CTFploy home">
-          <Image src="/logos/logo-solid.png" alt="" width={34} height={34} className="h-[34px] w-[34px] shrink-0 rounded-lg" priority />
+          <Image src={isDark ? "/logos/logo-transparent-dark.png" : "/logos/logo-transparent-light.png"} alt="" width={34} height={34} className="h-[34px] w-[34px] shrink-0" priority />
           <span className="text-lg font-semibold tracking-tight header-wordmark">
-            CTFploy
+            CTFploy by Conos
           </span>
-          {badge && (
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-foreground/20 text-muted-foreground">
-              {badge}
-            </span>
-          )}
         </Link>
         <nav className="flex items-center gap-4">
           {rightContent}
