@@ -48,41 +48,6 @@
 :root {
   --font-sans: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --background: #f7f8fc;
-  --foreground: #101828;
-  --card: #ffffff;
-  --card-foreground: #101828;
-  --popover: #ffffff;
-  --popover-foreground: #101828;
-  --primary: #3159d9;
-  --primary-foreground: #ffffff;
-  --secondary: #eef2ff;
-  --secondary-foreground: #1e3a8a;
-  --muted: #f1f5f9;
-  --muted-foreground: #53627a;
-  --accent: #e8eeff;
-  --accent-foreground: #1e3a8a;
-  --destructive: #dc2626;
-  --border: #dce3f0;
-  --input: #cbd5e1;
-  --ring: #5b7cfa;
-  --chart-1: #0B0E1C;
-  --chart-2: #0B0E1C;
-  --chart-3: #0B0E1C;
-  --chart-4: #0B0E1C;
-  --chart-5: #0B0E1C;
-  --radius: 0.5rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0B0E1C;
-  --sidebar-primary: #0B0E1C;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ffffff;
-  --sidebar-accent-foreground: #0B0E1C;
-  --sidebar-border: #0B0E1C;
-  --sidebar-ring: #0B0E1C;
-}
-
-.dark {
   --background: #0b1020;
   --foreground: #edf2ff;
   --card: #141c31;
@@ -107,6 +72,7 @@
   --chart-3: #0B0E1C;
   --chart-4: #0B0E1C;
   --chart-5: #0B0E1C;
+  --radius: 0.5rem;
   --sidebar: #0B0E1C;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #ffffff;
@@ -170,8 +136,5 @@
 }
 
 .header-wordmark {
-  color: var(--foreground);
-}
-.dark .header-wordmark {
   color: var(--foreground);
 }

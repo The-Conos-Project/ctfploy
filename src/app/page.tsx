@@ -5,35 +5,13 @@ import { ArrowRight, Container, Shield, Zap, Terminal, Copy, Check } from "lucid
 import { SiteHeader } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 
-type Theme = "light" | "dark";
-
-function getSystemTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-function getStoredTheme(): Theme | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("ctfploy-theme") as Theme | null;
-}
-
 export default function HomePage() {
-  const [theme, setTheme] = useState<Theme>(getStoredTheme() || getSystemTheme());
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-    localStorage.setItem("ctfploy-theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -50,7 +28,7 @@ export default function HomePage() {
 
       <main className="flex-1">
         <section className="flex flex-col items-center justify-center px-4 py-24 text-center min-h-[calc(100vh-64px-72px)]">
-          <div className="mx-auto w-full max-w-[1100px] space-y-8">
+          <div className="mx-auto w-full max-w-[1000px] space-y-8">
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
               Run better security labs.
             </h1>
